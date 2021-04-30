@@ -141,7 +141,8 @@ libassuan.so.*} initramfs/usr/lib/aarch64-linux-gnu/
     chmod 755 initramfs/usr/share/udhcpc/simple.script
     sed -i '/should be called from udhcpc/d' initramfs/usr/share/udhcpc/simple.script
     mkdir -p initramfs/lib/modules
-    cp -r /lib/modules/5.10.25-stb-av8+ initramfs/lib/modules
+#    cp -r /lib/modules/5.10.25-stb-av8+ initramfs/lib/modules
+    cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
     cat << EOF > initramfs/usr/share/udhcpc/default.script
 #!/bin/sh -x
 
@@ -193,7 +194,9 @@ echo 0 > /proc/sys/kernel/printk
 clear
  
 depmod -a
-modprobe meson_dw_hdmi
+#modprobe meson_dw_hdmi
+modprobe rockchipdrm
+modprobe phy_rockchip_inno_hdmi
 
 systemd-udevd &
 udevadm hwdb --update
