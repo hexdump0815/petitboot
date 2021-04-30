@@ -145,7 +145,7 @@ libassuan.so.*} initramfs/usr/lib/aarch64-linux-gnu/
 #    cp -r /lib/modules/5.10.25-stb-av8+ initramfs/lib/modules
     cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
     cat << EOF > initramfs/usr/share/udhcpc/default.script
-#!/bin/sh -x
+#!/bin/sh
 
 /usr/share/udhcpc/simple.script "\$@"
 /usr/sbin/pb-udhcpc "\$@"
@@ -178,7 +178,7 @@ video:x:44:
 input:x:122:
 EOF
     cat << EOF > initramfs/init
-#!/bin/sh -x
+#!/bin/sh
 
 /bin/busybox --install -s
 
