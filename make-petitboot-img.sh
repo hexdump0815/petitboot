@@ -105,6 +105,7 @@ libpcre*.so.*,\
 libmount.so.*,\
 libgcrypt.so.*,\
 libcrypt.so.*,\
+libcrypto.so.*,\
 libresolv.so.*,\
 libselinux.so.*,\
 libreadline.so.*,\
