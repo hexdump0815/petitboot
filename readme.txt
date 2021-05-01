@@ -2,7 +2,7 @@
 
 status:
 - overall status so far: it does not work yet
-- it builds for aarch64 on ubuntu 20.04
+- it builds for aarch64 and armv7l on ubuntu 20.04
 - used as initrd it gives a boot menu on the connected monitor on the tested systems
 - some screen corruption, but ctrl-l helps
 - the boot devices are detected and petitboot.conf seems to be parsed properly
@@ -10,15 +10,18 @@ status:
 - tested systems so far
   - allwinner s905w: hard reboots directly after kexec
   - rockchip rk3318: kernel crashes early on at kexec initiated reboot
+  - allwinner h3: pb-discover failes with 'device-mapper: reload ioctl on pb-mmcblk0p1-origin  failed: Invalid argument'
+                  if doing kexec by hand: 'syscall kexec_file_load not available' (seems to just inform about a fallback
+                                          to kexec_load) and after systemctl kexec it seems to hang after 'Starting
+                                          Reboot via kexec...'
 - plans
-  - test more systems: allwinner h6, mediatek mt8173 & mt8183 chromebooks
-  - test it on 32bit armv7l - exynos 4412 - and add support for it
+  - test more systems: allwinner h6, mediatek mt8173 & mt8183 chromebooks, exynos 4412
   - maybe find ways to make it actually work :)
   - cleanup the script: only add required kernel modules, add options for different systems etc.
 
 # odroid petitboot script based approach - original script for reference: make_uInitrd.sh.org
 
-apt-get install -y git autoconf automake autopoint libtool pkg-config libudev-dev libdevmapper-dev flex bison gettext intltool libgcrypt20-dev gperf libcap-dev libblkid-dev libmount-dev xsltproc docbook-xsl docbook-xml python-lxml libncurses5-dev libncursesw5-dev libdw-dev libgpgme-dev libkmod-dev
+apt-get install -y git autoconf automake autopoint libtool pkg-config libudev-dev libdevmapper-dev flex bison gettext intltool libgcrypt20-dev gperf libcap-dev libblkid-dev libmount-dev xsltproc docbook-xsl docbook-xml python-lxml libncurses5-dev libncursesw5-dev libdw-dev libgpgme-dev libkmod-dev meson ninja-build
 
 mkdir -p /compile/source/petitboot
 cd /compile/source/petitboot

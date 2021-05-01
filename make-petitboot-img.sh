@@ -10,7 +10,14 @@ if [ "$C" != 1 ] ; then
     exit 1
 fi
 
-nproc=4
+#MYNPROC=4
+MYNPROC=1
+# 32bit armv7l
+MYARCH=arm-linux-gnueabihf
+MYLDSO=ld-linux-armhf
+# 64bit aarch64
+#MYARCH=aarch64-linux-gnu
+#MYLDSO=ld-linux-aarch64
 
 mkdir -p make-petitboot-img
 cd make-petitboot-img
@@ -21,7 +28,7 @@ if [ ! -d systemd ] ; then
     cd systemd
         mkdir build
 	meson build -Dprefix=/usr -Dblkid=true -Dseccomp=false -Dlibcurl=false -Dpam=false -Dkmod=true
-	ninja -j "$(nproc)" -C build
+	ninja -j $MYNPROC -C build
     )
 fi
 
@@ -31,7 +38,7 @@ if [ ! -d kexec-tools ] ; then
         cd kexec-tools
         ./bootstrap
         ./configure --prefix=/usr
-        make -j "$(nproc)"
+        make -j $MYNPROC
     )
 fi
 
@@ -54,7 +61,7 @@ if [ ! -d petitboot ] ; then
         cd petitboot
         ./bootstrap
         ./configure --prefix=/usr --with-twin-x11=no --with-twin-fbdev=no --with-signed-boot=no --disable-nls
-        make -j "$(nproc)"
+        make -j $MYNPROC
     )
 fi
 
@@ -63,7 +70,7 @@ if [ ! -d busybox ] ; then
     (
         cd busybox
         make defconfig
-        LDFLAGS=--static make -j "$(nproc)"
+        LDFLAGS=--static make -j $MYNPROC
     )
 fi
 
@@ -72,13 +79,13 @@ if [ ! -d initramfs ] ; then
 bin,\
 sbin,\
 etc,\
-lib/aarch64-linux-gnu,\
+lib/${MYARCH},\
 proc,\
 sys,\
 newroot,\
 usr/bin,\
 usr/sbin,\
-usr/lib/aarch64-linux-gnu,\
+usr/lib/${MYARCH},\
 usr/lib/udev/rules.d,\
 usr/local/sbin,\
 usr/share/udhcpc,\
@@ -89,7 +96,7 @@ tmp}
     cp -Rp /lib/terminfo initramfs/lib/
     cp -Rp busybox/busybox initramfs/bin/
     ln -s busybox initramfs/bin/sh
-    cp -L /lib/aarch64-linux-gnu/{\
+    cp -L /lib/${MYARCH}/{\
 libc.so.*,\
 libm.so.*,\
 libdl.so.*,\
@@ -119,9 +126,9 @@ libz.so.*,\
 liblzma.so.*,\
 libbz2.so.*,\
 libgpg-error.so.*,\
-libnss_files.so.*} initramfs/lib/aarch64-linux-gnu/ 
-    cp -L /lib/ld-linux-aarch64.so.* initramfs/lib/
-    cp -L /usr/lib/aarch64-linux-gnu/{\
+libnss_files.so.*} initramfs/lib/${MYARCH}/ 
+    cp -L /lib/${MYLDSO}.so.* initramfs/lib/
+    cp -L /usr/lib/${MYARCH}/{\
 libform.so.*,\
 libformw.so.*,\
 libmenu.so.*,\
@@ -129,12 +136,12 @@ libmenuw.so.*,\
 libelf.so.*,\
 libdw.so.*,\
 libgpgme.so.*,\
-libassuan.so.*} initramfs/usr/lib/aarch64-linux-gnu/
+libassuan.so.*} initramfs/usr/lib/${MYARCH}/
     cp -Rp /usr/bin/gpg initramfs/usr/bin/
-    cp systemd/build/src/udev/libudev.so.* initramfs/lib/aarch64-linux-gnu/
+    cp systemd/build/src/udev/libudev.so.* initramfs/lib/${MYARCH}/
     cp -Rp systemd/build/{systemd-udevd,udevadm} initramfs/sbin/
     cp -Rp systemd/build/src/udev/*_id initramfs/usr/lib/udev/
-    cp -Rp systemd/build/src/shared/libsystemd-shared-245.so initramfs/lib/aarch64-linux-gnu/
+    cp -Rp systemd/build/src/shared/libsystemd-shared-245.so initramfs/lib/${MYARCH}/
     cp -Rp kexec-tools/build/sbin/kexec initramfs/sbin/
     cp -Rp systemd/{rules.d/*,build/rules.d/*} initramfs/usr/lib/udev/rules.d/
     rm -f initramfs/usr/lib/udev/rules.d/*-drivers.rules
@@ -142,8 +149,12 @@ libassuan.so.*} initramfs/usr/lib/aarch64-linux-gnu/
     chmod 755 initramfs/usr/share/udhcpc/simple.script
     sed -i '/should be called from udhcpc/d' initramfs/usr/share/udhcpc/simple.script
     mkdir -p initramfs/lib/modules
+# amlogic s905w
 #    cp -r /lib/modules/5.10.25-stb-av8+ initramfs/lib/modules
-    cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
+# rockchip rk3318
+#    cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
+# allwinner h3
+    cp -r /lib/modules/5.10.25-stb-av7+ initramfs/lib/modules
     cat << EOF > initramfs/usr/share/udhcpc/default.script
 #!/bin/sh
 
@@ -195,9 +206,14 @@ echo 0 > /proc/sys/kernel/printk
 clear
  
 depmod -a
+# amlogic s905w
 #modprobe meson_dw_hdmi
-modprobe rockchipdrm
-modprobe phy_rockchip_inno_hdmi
+# rockchip rk3318
+#modprobe rockchipdrm
+#modprobe phy_rockchip_inno_hdmi
+# allwinner h3
+modprobe sun4i_drm
+modprobe sun8i_mixer
 
 systemd-udevd &
 udevadm hwdb --update
@@ -225,7 +241,7 @@ if [ "$C" -lt 1 ] ; then
         cd petitboot
         make DESTDIR="$(realpath ../initramfs/)" install
     )
-    strip initramfs/{sbin/*,lib/aarch64-linux-gnu/*,usr/lib/aarch64-linux-gnu/*,usr/lib/udev/*_id}
+    strip initramfs/{sbin/*,lib/${MYARCH}/*,usr/lib/${MYARCH}/*,usr/lib/udev/*_id}
 fi
 
 if [ ! -f petitboot.img ] ; then
@@ -233,7 +249,8 @@ if [ ! -f petitboot.img ] ; then
         cd initramfs
         find . | cpio -H newc -o | lzma > ../petitboot.img
     )
-    mkimage -A arm64 -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
+    #mkimage -A arm64 -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
+    mkimage -A arm -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
 fi
 
 echo "Everything is OK."
