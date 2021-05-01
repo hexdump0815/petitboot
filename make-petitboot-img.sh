@@ -155,7 +155,7 @@ libassuan.so.*} initramfs/usr/lib/${MYARCH}/
 #    cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
 # allwinner h3
 #    cp -r /lib/modules/5.10.25-stb-av7+ initramfs/lib/modules
-# mediatek mt8173: no modules required - they would make the initrd too large anyway
+# mediatek mt8173/mt8183: no modules required - they would make the initrd too large anyway
     cat << EOF > initramfs/usr/share/udhcpc/default.script
 #!/bin/sh
 
@@ -215,7 +215,7 @@ depmod -a
 # allwinner h3
 #modprobe sun4i_drm
 #modprobe sun8i_mixer
-# mediatek 8173: no modprobe required
+# mediatek mt8173/mt8183: no modprobe required
 
 systemd-udevd &
 udevadm hwdb --update

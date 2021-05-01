@@ -15,8 +15,9 @@ status:
                                           to kexec_load) and after systemctl kexec it seems to hang after 'Starting
                                           Reboot via kexec...'
   - mediatek mt8173: kexec seems to shutdown properly (tested by hand), but seems to hang then (black screen)
+  - mediatek mt8183: similar situation like for allwinner h3
 - plans
-  - test more systems: allwinner h6, mediatek mt8183 chromebooks, exynos 4412
+  - test more systems: allwinner h6, exynos 4412
   - maybe find ways to make it actually work :)
   - cleanup the script: only add required kernel modules, add options for different systems etc.
 
@@ -40,6 +41,16 @@ cp /compile/doc/petitboot/petitboot-cmdline.elm cmdline
 mkimage -D "-I dts -O dtb -p 2048" -f auto -A arm64 -O linux -T kernel -C lz4 -a 0 -d Image.lz4 -b /boot/dtb-5.10.25-stb-mt7+/mt8173-elm.dtb -b /boot/dtb-5.10.25-stb-mt7+/mt8173-elm-hana.dtb -b /boot/dtb-5.10.25-stb-mt7+/mt8173-elm-hana-rev7.dtb -b /boot/dtb-5.10.25-stb-mt7+/mt8183-kukui-krane-sku176.dtb -b /boot/dtb-5.10.25-stb-mt7+/rk3399-gru-bob.dtb -b /boot/dtb-5.10.25-stb-mt7+/rk3399-gru-kevin.dtb -i /compile/source/petitboot/make-petitboot-img/petitboot.img kernel.itb
 vbutil_kernel --pack vmlinux.kpart --keyblock /usr/share/vboot/devkeys/kernel.keyblock --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --version 1 --config cmdline --bootloader bootloader.bin --vmlinuz kernel.itb --arch arm
 cp -v vmlinux.kpart /boot/petitboot-vmlinux.kpart-elm-5.10.25-stb-mt7+
+rm -f Image Image.lz4 cmdline bootloader.bin kernel.itb vmlinux.kpart
+
+# kukui krane - lenovo duet chromebook with mediatek mt8183
+cp /boot/Image-5.10.25-stb-cbm+ Image
+lz4 -f Image Image.lz4
+dd if=/dev/zero of=bootloader.bin bs=512 count=1
+cp /compile/doc/petitboot/petitboot-cmdline.krane cmdline
+mkimage -D "-I dts -O dtb -p 2048" -f auto -A arm64 -O linux -T kernel -C lz4 -a 0 -d Image.lz4 -b /boot/dtb-5.10.25-stb-cbm+/mt8173-elm.dtb -b /boot/dtb-5.10.25-stb-cbm+/mt8173-elm-hana.dtb -b /boot/dtb-5.10.25-stb-cbm+/mt8173-elm-hana-rev7.dtb -b /boot/dtb-5.10.25-stb-cbm+/mt8183-kukui-krane-sku176.dtb -b /boot/dtb-5.10.25-stb-cbm+/rk3399-gru-bob.dtb -b /boot/dtb-5.10.25-stb-cbm+/rk3399-gru-kevin.dtb -i /compile/source/petitboot/make-petitboot-img/petitboot.img kernel.itb
+vbutil_kernel --pack vmlinux.kpart --keyblock /usr/share/vboot/devkeys/kernel.keyblock --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --version 1 --config cmdline --bootloader bootloader.bin --vmlinuz kernel.itb --arch arm
+cp -v vmlinux.kpart /boot/petitboot-vmlinux.kpart-krane-5.10.25-stb-cbm+
 rm -f Image Image.lz4 cmdline bootloader.bin kernel.itb vmlinux.kpart
 
 
