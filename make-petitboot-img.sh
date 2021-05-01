@@ -10,14 +10,14 @@ if [ "$C" != 1 ] ; then
     exit 1
 fi
 
-#MYNPROC=4
-MYNPROC=1
+MYNPROC=4
+#MYNPROC=1
 # 32bit armv7l
-MYARCH=arm-linux-gnueabihf
-MYLDSO=ld-linux-armhf
+#MYARCH=arm-linux-gnueabihf
+#MYLDSO=ld-linux-armhf
 # 64bit aarch64
-#MYARCH=aarch64-linux-gnu
-#MYLDSO=ld-linux-aarch64
+MYARCH=aarch64-linux-gnu
+MYLDSO=ld-linux-aarch64
 
 mkdir -p make-petitboot-img
 cd make-petitboot-img
@@ -154,7 +154,8 @@ libassuan.so.*} initramfs/usr/lib/${MYARCH}/
 # rockchip rk3318
 #    cp -r /lib/modules/5.10.25-stb-rkc+ initramfs/lib/modules
 # allwinner h3
-    cp -r /lib/modules/5.10.25-stb-av7+ initramfs/lib/modules
+#    cp -r /lib/modules/5.10.25-stb-av7+ initramfs/lib/modules
+# mediatek mt8173: no modules required - they would make the initrd too large anyway
     cat << EOF > initramfs/usr/share/udhcpc/default.script
 #!/bin/sh
 
@@ -212,8 +213,9 @@ depmod -a
 #modprobe rockchipdrm
 #modprobe phy_rockchip_inno_hdmi
 # allwinner h3
-modprobe sun4i_drm
-modprobe sun8i_mixer
+#modprobe sun4i_drm
+#modprobe sun8i_mixer
+# mediatek 8173: no modprobe required
 
 systemd-udevd &
 udevadm hwdb --update
@@ -249,8 +251,10 @@ if [ ! -f petitboot.img ] ; then
         cd initramfs
         find . | cpio -H newc -o | lzma > ../petitboot.img
     )
-    #mkimage -A arm64 -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
-    mkimage -A arm -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
+# 32bit armv7l
+#    mkimage -A arm -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
+# 64bit aarch64
+    mkimage -A arm64 -O linux -T ramdisk -C lzma -a 0 -e 0 -n upetitboot.img -d petitboot.img upetitboot.img
 fi
 
 echo "Everything is OK."
